@@ -90,33 +90,6 @@ final Confetti confetti = new Confetti(
 final ConfigurationUnit config = confetti.parse(Paths.get("app.conf"));
 ```
 
-## Configuration syntax
-
-```
-# Comments start with #
-user "John Doe" {
-    login johndoe
-    password somepass123
-
-    # Subdirectives can nest arbitrarily
-    proxy {
-        ports 582 583 584
-    }
-}
-
-# Line continuations
-set $greeting "Hello, \
-World!"
-
-# Triple-quoted multiline strings
-description """The quick brown fox
-jumps over the
-lazy dog"""
-
-# Semicolons separate directives on one line
-width 800 ; height 600
-```
-
 ## Extensions
 
 Confetti defines three optional extensions. Enable them via `ConfettiOptions`:
@@ -202,25 +175,9 @@ This project is configured to publish as:
 - `groupId`: `io.github.welandaz`
 - `artifactId`: `jconfetti`
 
-### Verify The Published Artifact Locally
+The release workflow is located at [.github/workflows/publish.yml](https://github.com/welandaz/jconfetti/blob/main/.github/workflows/publish.yml).
 
-```bash
-./gradlew publishToMavenLocal
-```
-
-That installs the library into your local Maven repository so another local Gradle or Maven project can consume:
-
-```kotlin
-dependencies {
-    implementation("io.github.welandaz:jconfetti:1.0.0")
-}
-```
-
-### Publish From GitHub Actions
-
-This repository includes a release workflow at [.github/workflows/publish.yml].
-
-Before publishing, update the version in [build.gradle.kts] and push that commit to GitHub.
+Before publishing, update the version in [build.gradle.kts](https://github.com/welandaz/jconfetti/blob/main/build.gradle.kts) and push that commit to GitHub.
 
 Then run the workflow manually from the GitHub Actions UI.
 
@@ -237,7 +194,7 @@ The publish step runs:
 ./gradlew test publishToCentral
 ```
 
-`publishToCentral` uploads the signed Maven publication and then requests automatic publication through Sonatype Central.
+The task uploads the signed Maven publication and then requests automatic publication through Sonatype Central.
 If `build.gradle.kts` contains `version = "1.0.0"`, the workflow will publish `1.0.0` and then create the Git tag `1.0.0`.
 
 ## License
