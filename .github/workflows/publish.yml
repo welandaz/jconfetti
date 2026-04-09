@@ -1,0 +1,75 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Gradle runtime JDK
+        id: java-runtime
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Java 8 toolchain
+        id: java-toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Determine release version from Gradle
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(./gradlew -q printVersion | tail -n 1 | tr -d '\r')"
+
+          if [[ -z "${version}" ]]; then
+            echo "Release version is empty" >&2
+            exit 1
+          fi
+
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Ensure release tag does not already exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.release.outputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ steps.release.outputs.version }} already exists" >&2
+            exit 1
+          fi
+
+      - name: Test and publish
+        env:
+          JAVA_HOME: ${{ steps.java-runtime.outputs.path }}
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ steps.java-toolchain.outputs.path }}
+          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
+          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: ./gradlew test publishToCentral
+
+      - name: Create and push release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.release.outputs.version }}"
+          git push origin "${{ steps.release.outputs.version }}"

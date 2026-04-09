@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Gradle runtime JDK
+        id: java-runtime
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Java 8 toolchain
+        id: java-toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tests
+        env:
+          JAVA_HOME: ${{ steps.java-runtime.outputs.path }}
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ steps.java-toolchain.outputs.path }}
+        run: ./gradlew test
