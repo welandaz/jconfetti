@@ -36,6 +36,9 @@ jobs:
       - name: Determine release version from Gradle
         id: release
         shell: bash
+        env:
+          JAVA_HOME: ${{ steps.java-runtime.outputs.path }}
+          ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ steps.java-toolchain.outputs.path }}
         run: |
           set -euo pipefail
           version="$(./gradlew -q printVersion | tail -n 1 | tr -d '\r')"
