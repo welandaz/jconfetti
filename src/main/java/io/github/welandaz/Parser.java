@@ -45,7 +45,7 @@ final class Parser {
 
     private Directive parseDirective() {
         final List<String> arguments = parseArguments();
-        boolean sawNewline = consumeDirectiveSpacingAfterArguments();
+        final boolean sawNewline = consumeDirectiveSpacingAfterArguments();
 
         if (currentToken.type() == Token.Type.LEFT_BRACE) {
             return new Directive(arguments, parseSubdirectiveBlock());
