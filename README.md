@@ -13,7 +13,8 @@ configuration files. See the [specification](https://confetti.hgs3.me/specificat
 - Full [Confetti 1.0 specification](https://confetti.hgs3.me/specification) compliance (passes the entire conformance test suite)
 - All three official extensions: C-style comments, expression arguments, and punctuator arguments
 - Strict UTF-8 validation
-- Lightweight API (`ConfigurationUnit` / `Directive`)
+- Single entry-point API via `Confetti`
+- Raw parsed access via `ConfigurationUnit` and `Directive`
 - Reflection-based object mapping
 
 ## Installation
@@ -22,7 +23,7 @@ configuration files. See the [specification](https://confetti.hgs3.me/specificat
 
 ```kotlin
 dependencies {
-    implementation("io.github.welandaz:jconfetti:1.0.0")
+    implementation("io.github.welandaz:jconfetti:1.0.1")
 }
 ```
 
@@ -32,7 +33,7 @@ dependencies {
 <dependency>
     <groupId>io.github.welandaz</groupId>
     <artifactId>jconfetti</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 
@@ -55,19 +56,20 @@ database {
 Parse it in Java:
 
 ```java
-import io.github.welandaz.*;
+import io.github.welandaz.Confetti;
+import io.github.welandaz.ConfigurationUnit;
+import io.github.welandaz.Directive;
+
 import java.nio.file.Paths;
 
 final Confetti confetti = new Confetti();
-final ConfigurationUnit config = confetti.parse(Paths.get("app.conf"));
+final ConfigurationUnit unit = confetti.parse(Paths.get("app.conf"));
 
-for (final Directive directive : config.directives()) {
-    System.out.println(directive.arguments().get(0)); // "server", "database"
+for (final Directive directive : unit.directives()) {
+    System.out.println(directive.name());
 
     for (final Directive child : directive.subdirectives()) {
-        final String key = child.arguments().get(0);
-        final String value = child.arguments().get(1);
-        System.out.println("  " + key + " = " + value);
+        System.out.println("  " + child.name() + " = " + child.value(0));
     }
 }
 ```
@@ -75,18 +77,29 @@ for (final Directive directive : config.directives()) {
 You can also parse a string directly:
 
 ```java
-final ConfigurationUnit config = new Confetti().parse("login johndoe ; password somepass123");
+import io.github.welandaz.Confetti;
+import io.github.welandaz.ConfigurationUnit;
+
+final Confetti confetti = new Confetti();
+final ConfigurationUnit configurationUnit = confetti.parse("login johndoe ; password somepass123");
 ```
 
 Or create a parser with custom default options:
 
 ```java
+import io.github.welandaz.Confetti;
+import io.github.welandaz.ConfettiOptions;
+import io.github.welandaz.ConfigurationUnit;
+
+import java.nio.file.Paths;
+
 final Confetti confetti = new Confetti(
         ConfettiOptions.builder()
                 .cStyleComments(true)
-                .build());
+                .build()
+);
 
-final ConfigurationUnit config = confetti.parse(Paths.get("app.conf"));
+final ConfigurationUnit configurationUnit = confetti.parse(Paths.get("app.conf"));
 ```
 
 ## Extensions
@@ -94,13 +107,19 @@ final ConfigurationUnit config = confetti.parse(Paths.get("app.conf"));
 Confetti defines three optional extensions. Enable them via `ConfettiOptions`:
 
 ```java
-final ConfettiOptions options = ConfettiOptions.builder()
+import io.github.welandaz.Confetti;
+import io.github.welandaz.ConfettiOptions;
+import io.github.welandaz.ConfigurationUnit;
+
+import java.nio.file.Paths;
+
+final ConfettiOptions confettiOptions = ConfettiOptions.builder()
         .cStyleComments(true)        // C-style // and /* */ comments
         .expressionArguments(true)   // Parenthesized expressions: func(x + 1)
         .punctuators("=", ":=", "+=")  // Custom punctuator arguments
         .build();
 
-final ConfigurationUnit config = new Confetti(options).parse(Paths.get("app.conf"));
+final ConfigurationUnit configurationUnit = new Confetti(options).parse(Paths.get("app.conf"));
 ```
 
 ## Object mapping
@@ -108,6 +127,11 @@ final ConfigurationUnit config = new Confetti(options).parse(Paths.get("app.conf
 The library can also map a parsed configuration directly onto Java objects using reflection:
 
 ```java
+import io.github.welandaz.Confetti;
+import io.github.welandaz.ConfettiName;
+
+import java.nio.file.Paths;
+
 class AppConfig {
     Server server;
     Database database;
@@ -126,31 +150,25 @@ class Database {
     int poolSize;
 }
 
-// Parse and map in one step
-final Confetti confetti = new Confetti();
-final AppConfig config = confetti.map(confetti.parse(Paths.get("app.conf")), AppConfig.class);
+final AppConfig appConfig = new Confetti().map(Paths.get("app.conf"), AppConfig.class);
 
-System.out.println(config.server.host);
-System.out.println(config.server.port);
-System.out.println(config.database.poolSize);
+System.out.println(appConfig.server.host);
+System.out.println(appConfig.server.port);
+System.out.println(appConfig.database.poolSize);
 ```
 
-You can also parse and map directly:
-
-```java
-final AppConfig config = new Confetti().map(Paths.get("app.conf"), AppConfig.class);
-```
+If you want to inspect the raw directives before mapping, parse into a `ConfigurationUnit` first and then map that unit with the same `Confetti` instance.
 
 ### Supported field types
 
 | Type | Mapping |
 |------|---------|
-| `String` | Directive value argument |
-| `int` / `Integer`, `long` / `Long`, `double` / `Double`, `float` / `Float` | Parsed from value argument |
+| `String`, `CharSequence`, `Object` | Bound from exactly one directive value argument |
+| `int` / `Integer`, `long` / `Long`, `double` / `Double`, `float` / `Float` | Parsed from exactly one directive value argument |
 | `boolean` / `Boolean` | Accepts `true`/`false`, `yes`/`no`, `on`/`off`, `1`/`0` |
 | Any class with no-arg constructor | Populated from subdirectives |
-| `List<T>` | Collects repeated directives with the same name |
-| `Map<String, String>` | Populated from `name key value` directives |
+| `List<T>` and concrete `List` implementations | Collect repeated directives with the same name |
+| `Map<String, String>` and concrete `Map` implementations | Populated from `name key [value]` directives |
 
 ## Building from source
 
