@@ -3,8 +3,7 @@
 A Java parser for the [Confetti](https://confetti.hgs3.me/) configuration language.
 
 Confetti is a minimalistic, untyped, and unopinionated configuration language designed for human-editable
-configuration files. It competes with INI files rather than JSON or XML — learnable in minutes with a
-compact grammar. See the [specification](https://confetti.hgs3.me/specification) and
+configuration files. See the [specification](https://confetti.hgs3.me/specification) and
 [examples](https://confetti.hgs3.me/learn/) to learn more.
 
 ## Features
