@@ -63,9 +63,9 @@ import io.github.welandaz.Directive;
 import java.nio.file.Paths;
 
 final Confetti confetti = new Confetti();
-final ConfigurationUnit unit = confetti.parse(Paths.get("app.conf"));
+final ConfigurationUnit configurationUnit = confetti.parse(Paths.get("app.conf"));
 
-for (final Directive directive : unit.directives()) {
+for (final Directive directive : configurationUnit.directives()) {
     System.out.println(directive.name());
 
     for (final Directive child : directive.subdirectives()) {
@@ -114,8 +114,8 @@ import io.github.welandaz.ConfigurationUnit;
 import java.nio.file.Paths;
 
 final ConfettiOptions confettiOptions = ConfettiOptions.builder()
-        .cStyleComments(true)        // C-style // and /* */ comments
-        .expressionArguments(true)   // Parenthesized expressions: func(x + 1)
+        .cStyleComments(true)          // C-style // and /* */ comments
+        .expressionArguments(true)     // Parenthesized expressions: func(x + 1)
         .punctuators("=", ":=", "+=")  // Custom punctuator arguments
         .build();
 
