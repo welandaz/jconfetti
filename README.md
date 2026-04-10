@@ -23,7 +23,7 @@ configuration files. See the [specification](https://confetti.hgs3.me/specificat
 
 ```kotlin
 dependencies {
-    implementation("io.github.welandaz:jconfetti:1.0.1")
+    implementation("io.github.welandaz:jconfetti:1.0.0")
 }
 ```
 
@@ -33,7 +33,7 @@ dependencies {
 <dependency>
     <groupId>io.github.welandaz</groupId>
     <artifactId>jconfetti</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
