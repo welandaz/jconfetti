@@ -15,7 +15,7 @@ compact grammar. See the [specification](https://confetti.hgs3.me/specification)
 - All three official extensions: C-style comments, expression arguments, and punctuator arguments
 - Strict UTF-8 validation
 - Lightweight API (`ConfigurationUnit` / `Directive`)
-- Reflection-based object mapping via `Confetti`
+- Reflection-based object mapping
 
 ## Installation
 
@@ -106,10 +106,9 @@ final ConfigurationUnit config = new Confetti(options).parse(Paths.get("app.conf
 
 ## Object mapping
 
-`Confetti` can map a parsed configuration directly onto Java objects using reflection:
+The library can also map a parsed configuration directly onto Java objects using reflection:
 
 ```java
-// Target classes — plain Java objects with a no-arg constructor
 class AppConfig {
     Server server;
     Database database;
@@ -124,7 +123,7 @@ class Server {
 class Database {
     String url;
 
-    @ConfettiName("pool_size")  // map directive name to a differently-named field
+    @ConfettiName("pool_size")
     int poolSize;
 }
 
@@ -132,9 +131,9 @@ class Database {
 final Confetti confetti = new Confetti();
 final AppConfig config = confetti.map(confetti.parse(Paths.get("app.conf")), AppConfig.class);
 
-System.out.println(config.server.host);      // "127.0.0.1"
-System.out.println(config.server.port);      // 8080
-System.out.println(config.database.poolSize); // 10
+System.out.println(config.server.host);
+System.out.println(config.server.port);
+System.out.println(config.database.poolSize);
 ```
 
 You can also parse and map directly:
